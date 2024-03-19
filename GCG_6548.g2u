@@ -1,0 +1,279 @@
+﻿Program.Sub.ScreenSU.Start
+Gui.FormTrackNo..Create(BaseForm)
+Gui.FormTrackNo..Caption("Duplicate Serial Numbers")
+Gui.FormTrackNo..Size(405,393)
+Gui.FormTrackNo..MinX(0)
+Gui.FormTrackNo..MinY(0)
+Gui.FormTrackNo..Position(0,0)
+Gui.FormTrackNo..AlwaysOnTop(False)
+Gui.FormTrackNo..FontName("Tahoma")
+Gui.FormTrackNo..FontSize(8.25)
+Gui.FormTrackNo..ControlBox(True)
+Gui.FormTrackNo..MaxButton(True)
+Gui.FormTrackNo..MinButton(True)
+Gui.FormTrackNo..MousePointer(0)
+Gui.FormTrackNo..Moveable(True)
+Gui.FormTrackNo..Sizeable(True)
+Gui.FormTrackNo..ShowInTaskBar(True)
+Gui.FormTrackNo..TitleBar(True)
+Gui.FormTrackNo..Event(UnLoad,FormTrackNo_UnLoad)
+Gui.FormTrackNo.gsgcTrackNo.Create(GsGridControl)
+Gui.FormTrackNo.gsgcTrackNo.Enabled(True)
+Gui.FormTrackNo.gsgcTrackNo.Visible(True)
+Gui.FormTrackNo.gsgcTrackNo.Zorder(0)
+Gui.FormTrackNo.gsgcTrackNo.Size(378,263)
+Gui.FormTrackNo.gsgcTrackNo.Position(14,90)
+Gui.FormTrackNo.gsgcTrackNo.Anchor(15)
+Gui.FormTrackNo.cmd_Apply.Create(Button)
+Gui.FormTrackNo.cmd_Apply.Enabled(True)
+Gui.FormTrackNo.cmd_Apply.Visible(True)
+Gui.FormTrackNo.cmd_Apply.Zorder(0)
+Gui.FormTrackNo.cmd_Apply.Size(54,23)
+Gui.FormTrackNo.cmd_Apply.Position(269,28)
+Gui.FormTrackNo.cmd_Apply.Caption("Check")
+Gui.FormTrackNo.cmd_Apply.FontName("Tahoma")
+Gui.FormTrackNo.cmd_Apply.FontSize(8.25)
+Gui.FormTrackNo.cmd_Apply.ImageAlign(8)
+Gui.FormTrackNo.cmd_Apply.Event(Click,cmd_Apply_Click)
+Gui.FormTrackNo.cmd_Apply.Anchor(9)
+Gui.FormTrackNo.txt_PacklistNo.Create(TextBox,"",True,239,20,0,14,30,True,0,"Tahoma",8.25,,1)
+Gui.FormTrackNo.lbl1.Create(Label,"Please type in the packing list number:",True,218,13,0,14,13,True,0,"Tahoma",8.25,,0,0)
+Gui.FormTrackNo.lbl1.BorderStyle(0)
+Gui.FormTrackNo.lbl1.FontStyle(True,False,False,False,False)
+Gui.FormTrackNo.lbl2.Create(Label,"The following serial numbers are duplicates:",True,209,13,0,16,73,True,0,"Tahoma",8.25,,0,0)
+Gui.FormTrackNo.lbl2.BorderStyle(0)
+Gui.FormTrackNo.cmdClear.Create(Button)
+Gui.FormTrackNo.cmdClear.Enabled(True)
+Gui.FormTrackNo.cmdClear.Visible(True)
+Gui.FormTrackNo.cmdClear.Zorder(0)
+Gui.FormTrackNo.cmdClear.Size(54,23)
+Gui.FormTrackNo.cmdClear.Position(338,28)
+Gui.FormTrackNo.cmdClear.Caption("Clear")
+Gui.FormTrackNo.cmdClear.FontName("Tahoma")
+Gui.FormTrackNo.cmdClear.FontSize(8.25)
+Gui.FormTrackNo.cmdClear.DefaultValue("")
+Gui.FormTrackNo.cmdClear.Event(Click,cmdClear_Click)
+Program.Sub.ScreenSU.End
+Program.Sub.Preflight.Start
+V.Global.sError.Declare(String)
+
+Program.Sub.Preflight.End
+Program.Sub.Main.Start
+'Author: Arturo Almaguer
+'Date: 17 November 2021
+'Customer: Exacto Spring Corp, quote number 12826
+'This program allows the user to identify the tracking numbers from a packlist that already exist in DB
+'The program is going to triggered from a new custom menu item within Shipping n Receiving - Transactions - Duplicate Serial No. Validation [6548]
+
+Function.Intrinsic.UI.UsePixels ' Allows you to use Pixels instead of Twips throughout
+
+F.Intrinsic.Control.Try
+
+	'Setting context menus
+	F.Intrinsic.Control.CallSub("SetContextMenus")
+	
+	'Displaying the form
+	gui.FormTrackNo.gsgcTrackNo.Visible(False)
+	gui.FormTrackNo..Show
+		
+F.Intrinsic.Control.Catch
+
+	F.Intrinsic.Control.CallSub(CatchError)
+	
+F.Intrinsic.Control.EndTry
+
+Program.Sub.Main.End
+Program.Sub.LoadGrid.Start
+F.Intrinsic.Control.Try
+
+	gui.FormTrackNo.gsgcTrackNo.AddGridviewFromDatatable("gvTN", "dtTN")
+	
+	''General Gridview properties
+	gui.FormTrackNo.gsgcTrackNo.SetGridviewProperty("gvTN", V.Enum.GridViewPropertyNames!EnableAppearanceOddRow, True)
+	gui.FormTrackNo.gsgcTrackNo.SetGridviewProperty("gvTN", V.Enum.GridViewPropertyNames!RowAutoHeight, True)
+	gui.FormTrackNo.gsgcTrackNo.SetGridviewProperty("gvTN", V.Enum.GridViewPropertyNames!ColumnPanelRowHeight, 45)
+	gui.FormTrackNo.gsgcTrackNo.SetGridviewProperty("gvTN", V.Enum.GridViewPropertyNames!EnableAppearanceFocusedRow, True) 
+
+	''Column properties
+
+	gui.FormTrackNo.gsgcTrackNo.SetColumnProperty("gvTN", "DUPLICATE", V.Enum.ColumnPropertyNames!Visible, False)
+	
+	'Formatting captions
+	gui.FormTrackNo.gsgcTrackNo.SetColumnProperty("gvTN", "PCK_NO", V.Enum.ColumnPropertyNames!Caption, "Packing List No.")
+	gui.FormTrackNo.gsgcTrackNo.SetColumnProperty("gvTN", "TRACKING_NO", V.Enum.ColumnPropertyNames!Caption, "Tracking No.")
+	
+	'Formatting headers
+	gui.FormTrackNo.gsgcTrackNo.SetColumnProperty("gvTN", "PCK_NO", V.Enum.ColumnPropertyNames!HeaderFontBold, True)
+	gui.FormTrackNo.gsgcTrackNo.SetColumnProperty("gvTN", "TRACKING_NO", V.Enum.ColumnPropertyNames!HeaderFontBold, True)
+	
+	'Formatting headers allignment
+	gui.FormTrackNo.gsgcTrackNo.SetColumnProperty("gvTN", "PCK_NO", V.Enum.ColumnPropertyNames!HeaderHAlignment, "Center")
+	gui.FormTrackNo.gsgcTrackNo.SetColumnProperty("gvTN", "TRACKING_NO", V.Enum.ColumnPropertyNames!HeaderHAlignment, "Center")
+
+	'Formatting widths
+	gui.FormTrackNo.gsgcTrackNo.SetColumnProperty("gvTN", "PCK_NO", V.Enum.ColumnPropertyNames!MinWidth, 100)
+	gui.FormTrackNo.gsgcTrackNo.SetColumnProperty("gvTN", "TRACKING_NO", V.Enum.ColumnPropertyNames!MinWidth, 100)
+
+	'Displaying gv
+	gui.FormTrackNo.gsgcTrackNo.MainView("gvTN")
+	gui.FormTrackNo.gsgcTrackNo.Visible(True)
+
+F.Intrinsic.Control.Catch
+
+	F.Intrinsic.Control.CallSub(CatchError)
+	
+F.Intrinsic.Control.EndTry
+
+Program.Sub.LoadGrid.End
+Program.Sub.SetContextMenus.Start
+'Creates the context menu
+F.Intrinsic.Control.Try
+	
+	gui.FormTrackNo..ContextMenuCreate("ctxgsgcPO")
+	gui.FormTrackNo.gsgcTrackNo.ContextMenuAttach("ctxgsgcPO")
+	gui.FormTrackNo..ContextMenuAddItem("ctxgsgcPO","Export",0,"Export")
+	
+	gui.FormTrackNo..ContextMenuSetItemEventHandler("ctxgsgcPO","Export","Export")
+
+F.Intrinsic.Control.Catch
+
+	F.Intrinsic.Control.CallSub(CatchError)
+	
+F.Intrinsic.Control.EndTry
+Program.Sub.SetContextMenus.End
+Program.Sub.FormTrackNo_UnLoad.Start
+F.Intrinsic.Control.CallSub("Unload")
+F.Intrinsic.Control.End()
+
+Program.Sub.FormTrackNo_UnLoad.End
+Program.Sub.cmd_Apply_Click.Start
+'This subrourite validates the tracking numbers to see if they are duplicates
+
+F.Intrinsic.Control.Try
+
+	V.Local.sPacklistNo.Declare(String)
+	V.Local.sSQL.Declare(String)
+	V.Local.iCounter.Declare(Long)
+	V.Local.sTrackingNo.Declare(String)
+	
+	V.Local.sPacklistNo.Set(V.Screen.FormTrackNo!txt_PacklistNo.Text)
+	F.Intrinsic.String.LPad(V.Local.sPacklistNo,"0",7,V.Local.sPacklistNo)
+	
+	'Getting all the tracking numbers from an specific shipment by looking for the packlist number
+	F.ODBC.Connection!Con.OpenCompanyConnection
+	F.Intrinsic.String.Build("select RTRIM(PCK_NO) PCK_NO, RTRIM(TRACKING_NO) TRACKING_NO from V_BOL_CARTON_NUM where PCK_NO = '{0}' order by TRACKING_NO;", V.Local.sPacklistNo,  V.Local.sSQL)
+	F.Data.DataTable.CreateFromSQL("dtTrackingNo", "Con", V.Local.sSQL)
+	F.Data.DataTable.AddColumn("dtTrackingNo", "DUPLICATE", "Boolean")
+	
+	'Looping through dt to validate if tracking number already exists
+	F.Intrinsic.Control.For(V.Local.iCounter, 0, V.DataTable.dtTrackingNo.RowCount--, 1)
+		
+		V.Local.sTrackingNo.Set(V.DataTable.dtTrackingNo(V.Local.iCounter).TRACKING_NO!FieldValTrim)
+		F.Intrinsic.String.Build("select count(TRACKING_NO) from V_BOL_CARTON_NUM where TRACKING_NO = '{0}' or TRACKING_NO = '{1}';", V.Local.sTrackingNo.UCase, V.Local.sTrackingNo.LCase, V.Local.sSQL)
+		F.ODBC.Connection!Con.ExecuteAndReturn(V.Local.sSQL, V.Local.sSQL)
+		
+		'If it exists, then set value to true in DUPLICATE column
+		F.Intrinsic.Control.If(V.Local.sSQL, >, 1)
+			F.Data.DataTable.SetValue("dtTrackingNo", V.Local.iCounter, "DUPLICATE", True)
+		F.Intrinsic.Control.EndIf
+		
+	F.Intrinsic.Control.Next(V.Local.iCounter)
+	F.ODBC.Connection!Con.Close
+	
+	'Creating a new dt with just the values that are duplicates
+	F.Data.DataView.Create("dtTrackingNo", "dvTrackingNo", 22,"[DUPLICATE] = 'True'","")	
+	F.Data.DataView.ToDataTable("dtTrackingNo", "dvTrackingNo","dtTN", True)
+	F.Data.DataTable.Close("dtTrackingNo")
+	
+	'Calling sub
+	F.Intrinsic.Control.CallSub("LoadGrid")
+
+F.Intrinsic.Control.Catch
+
+	F.Intrinsic.Control.CallSub(CatchError)
+	
+F.Intrinsic.Control.EndTry
+
+Program.Sub.cmd_Apply_Click.End
+Program.Sub.Export.Start
+'This sub exports the gv 
+
+F.Intrinsic.Control.Try
+
+	V.Local.sFileExport.Declare(String)
+	V.Local.bExcel.Declare(String)
+	V.Local.sMessage.Declare(String)
+	
+	'Folder browser to allow the user to select the export path
+	F.Intrinsic.UI.FolderBrowser("Select the path to export the gridview", "", V.Local.sFileExport)
+	F.Intrinsic.Control.If(V.Local.sFileExport.IsNotCancel)
+	
+		F.Automation.MSWord.CheckPresence(V.Local.bExcel)
+		F.Intrinsic.Control.If(V.Local.bExcel, =, True) 
+			
+			F.Intrinsic.String.Build("{0}\Duplicate Serial Numbers.xlsx", V.Local.sFileExport, V.Local.sFileExport)
+			GUI.FormTrackNo.gsgcTrackNo.Export(V.Local.sFileExport,"xlsx")
+			F.Intrinsic.Task.ShellExec(0,"",V.Local.sFileExport,"","",1)
+			
+		F.Intrinsic.Control.Else
+			
+			F.Intrinsic.String.Build("{0}\Duplicate Serial Numbers.csv", V.Local.sFileExport, V.Local.sFileExport)
+			GUI.FormTrackNo.gsgcTrackNo.Export(V.Local.sFileExport,"csv")
+			F.Intrinsic.Task.ShellExec(0,"",V.Local.sFileExport,"","",1)
+			
+		F.Intrinsic.Control.EndIf
+		
+		'Displaying exported path to user
+		F.Intrinsic.String.Build("File has been exported to {0}", V.Local.sFileExport, V.Local.sMessage)
+		F.Intrinsic.UI.Msgbox(V.Local.sMessage)
+		
+	F.Intrinsic.Control.Else
+	
+		F.Intrinsic.UI.Msgbox("Exported file wasn't generated. Export path required to export", "Required Field")
+		
+	F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+
+	F.Intrinsic.Control.CallSub(CatchError)
+	
+F.Intrinsic.Control.EndTry
+Program.Sub.Export.End
+Program.Sub.CatchError.Start
+F.Intrinsic.Control.CallSub("Unload")
+
+'To display the error
+F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}", V.Ambient.ScriptPath, V.Ambient.Newline, V.Ambient.SubroutineCalledFrom, V.Ambient.ErrorNumber, V.Ambient.ErrorDescription, V.Ambient.GABVersion, V.Global.sError) 
+F.Intrinsic.UI.Msgbox(V.Global.sError)
+F.Intrinsic.Control.End()
+Program.Sub.CatchError.End
+Program.Sub.Unload.Start
+'Closes the connection if it is open
+f.Intrinsic.Control.If(v.ODBC.con.exists,=,"1") 	
+    f.ODBC.Connection!Con.Close
+f.Intrinsic.Control.EndIf
+Program.Sub.Unload.End
+Program.Sub.cmdClear_Click.Start
+'This button clears all values from the screen and removes all rows from grid
+
+F.Intrinsic.Control.Try
+
+	'Default values for textboxes
+	gui.FormTrackNo.txt_PacklistNo.Text("")
+	
+	F.Data.DataTable.Close("dtTN")
+	
+	'Reset gv
+	gui.FormTrackNo.gsgcTrackNo.Visible(False)
+
+F.Intrinsic.Control.Catch
+
+	F.Intrinsic.Control.CallSub(CatchError)
+	
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdClear_Click.End
+
+Program.Sub.Comments.Start
+${$5$}$3.0.0.0$}$1
+${$6$}$apadilla$}$20211202111022059$}$Lag9STqBJOmNXSbd5+msRcBWPGz0aFqSwHruISZ+s7wepD8cFyemvs4hm7y16LZVRC+5fOcxFUsFaZgAkCgO5Q==
+Program.Sub.Comments.End
